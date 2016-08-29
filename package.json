@@ -1,6 +1,6 @@
 {
   "name": "logi-securekey",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A nodejs module for Logi's SSO method",
   "main": "index.js",
   "scripts": {

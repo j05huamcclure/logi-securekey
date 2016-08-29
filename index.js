@@ -9,16 +9,14 @@ exports.createToken = (urlObj,userObj,paramsObj,callback)=>{
 			port: (validUrlObj && urlObj.hasOwnProperty('port'))? ':'+urlObj.port: ''
 		};
 		
+	try{		
 		// Add a forward slash to the begining of the pathname property and remove any trailing slashes.
 		if(url.pathname && url.pathname.charAt(0) !== '/') url.pathname = '/'+url.pathname;
 		if(url.pathname && url.pathname.substr(-1) === '/') url.pathname = url.pathname.substr(0, url.pathname.length - 1);
-
-	try{
+		
 		if(Object.keys(userObj).length){
 			userObj = querystring.stringify(userObj);
 			paramsObj = (typeof paramsObj === 'object')? '&'+querystring.stringify(paramsObj): '';
-			
-			console.log(url.protocol+'://'+url.hostname+url.port+url.pathname+'/rdTemplate/rdGetSecureKey.aspx?'+userObj+paramsObj)
 			
 			// Send an http request to the Logi application	
 			request({url: url.protocol+'://'+url.hostname+url.port+url.pathname+'/rdTemplate/rdGetSecureKey.aspx?'+userObj+paramsObj, json: true}, (error, response, body)=>{
