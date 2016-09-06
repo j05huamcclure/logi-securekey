@@ -1,6 +1,6 @@
 {
   "name": "logi-securekey",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A nodejs module for Logi's SSO method",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,8 @@
     "user",
     "authentication",
     "Logi",
-    "Analytics"
+    "analytics",
+    "securekey"
   ],
   "author": "Joshua McClure",
   "license": "MIT",
