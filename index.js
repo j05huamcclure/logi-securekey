@@ -1,41 +1,53 @@
-var request = require("request"),
+var http = require("http"),
 	querystring = require('querystring')
 		
-exports.createToken = (urlObj,userObj,paramsObj,callback)=>{
-		var validUrlObj = (urlObj && typeof urlObj !== 'undefined' && typeof urlObj === 'object')? true: false,
-			url = {
-				protocol: (validUrlObj && urlObj.hasOwnProperty('protocol'))? urlObj.protocol: 'http',
-				hostname: (validUrlObj && urlObj.hasOwnProperty('hostname'))? urlObj.hostname: 'localhost',
-				pathname: (validUrlObj && urlObj.hasOwnProperty('pathname'))? urlObj.pathname: '',
-				port: (validUrlObj && urlObj.hasOwnProperty('port'))? ':'+urlObj.port: ''
-			};
-		
+exports.createToken = (arr,callback)=>{
 	try{		
-		// Add a forward slash to the begining of the pathname property and remove any trailing slashes.
-		if(url.pathname && url.pathname.charAt(0) !== '/') url.pathname = '/'+url.pathname;
-		if(url.pathname && url.pathname.substr(-1) === '/') url.pathname = url.pathname.substr(0, url.pathname.length - 1);
+		var URLS = [],
+			results = [];
+
+		arr.forEach((url,i)=>{
+			var validUrlObj = (arr[i].url && typeof arr[i].url !== 'undefined' && typeof arr[i].url === 'object')? true: false,
+				url = {
+					protocol: (validUrlObj && arr[i].url.hasOwnProperty('protocol'))? arr[i].url.protocol: 'http',
+					hostname: (validUrlObj && arr[i].url.hasOwnProperty('hostname'))? arr[i].url.hostname: 'localhost',
+					pathname: (validUrlObj && arr[i].url.hasOwnProperty('pathname'))? arr[i].url.pathname: '',
+					port: (validUrlObj && arr[i].url.hasOwnProperty('port'))? ':'+arr[i].url.port: ''
+				};
+
+			// Add a forward slash to the begining of the pathname property and remove any trailing slashes.
+			if(url.pathname && url.pathname.charAt(0) !== '/') url.pathname = '/'+url.pathname;
+			if(url.pathname && url.pathname.substr(-1) === '/') url.pathname = url.pathname.substr(0, url.pathname.length - 1);
+					
+			var userObj = querystring.stringify(arr[i].user),
+				paramsObj = (typeof arr[i].params === 'object')? '&'+querystring.stringify(arr[i].params): '';
+
+			URLS.push(url.protocol+'://'+url.hostname+url.port+url.pathname+'/rdTemplate/rdGetSecureKey.aspx?'+userObj+paramsObj)
+		})
 		
-		if(Object.keys(userObj).length){
-			userObj = querystring.stringify(userObj);
-			paramsObj = (typeof paramsObj === 'object')? '&'+querystring.stringify(paramsObj): '';
-			
-			// Send an http request to the Logi application	
-			request({url: url.protocol+'://'+url.hostname+url.port+url.pathname+'/rdTemplate/rdGetSecureKey.aspx?'+userObj+paramsObj, json: true}, (error, response, body)=>{
-				if(!error && response.statusCode === 200){
-					callback(null,body);
-				}else{
-					if(response && response.statusCode === 404){
-						callback('Error 404: It seems that the URL to your Logi application is not correct. Please correct the URL and try again.');					
+		synchAPICalls(URLS);
+		
+		// code borrowed from http://mikelam.azurewebsites.net/how-to-make-synchronous-http-requests-in-node-js/
+		function synchAPICalls(urls){
+			var url = urls.pop();
+			http.get(url,function(res){
+				var chunks = '';
+				res.on('data',function(d){
+					chunks += d;
+				});
+				res.on('end',function(){
+					results.push(chunks);
+					if(urls.length){
+						synchAPICalls(urls);
 					}else{
-						callback(error);
+						callback(null,results);
 					}
-				}
-			});
-		}else{
-			callback('ERROR: Please provide a valid user object.');
-		}
+				})
+			})
+		}	
 	}
 	catch(err){
 		callback(err);
 	}
+
 }
